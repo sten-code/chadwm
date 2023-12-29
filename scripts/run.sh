@@ -1,8 +1,8 @@
 #!/bin/sh
 
-xrdb merge ~/.Xresources 
+xrdb merge ~/.config/chadwm/.Xresources 
 xbacklight -set 10 &
-feh --bg-fill ~/Pictures/wall/gruv.png &
+feh --bg-fill ~/.wallpaper/wallpaper.png &
 xset r rate 200 50 &
 picom &
 

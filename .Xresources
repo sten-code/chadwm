@@ -31,7 +31,7 @@ st.font:           JetBrainsMono Nerd Font:style:medium:pixelsize=15
 #define base0F #be5046
 
 *foreground:   base07
-*background:   #1e222a
+*background:   #1E1D2D
 *cursorColor:  base05
 
 *color0:       base00
@@ -55,7 +55,7 @@ st.font:           JetBrainsMono Nerd Font:style:medium:pixelsize=15
 ! just remove this if you dont use my tabbed
 
 tabbed.selfgcolor:   #d6d8eb
-tabbed.selbgcolor:   #1e222a
+tabbed.selbgcolor:   #1E1D2D
 
 tabbed.normfgcolor:  #9294a8
 tabbed.normbgcolor:  #282c34
