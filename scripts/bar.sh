@@ -3,38 +3,39 @@
 # ^c$var^ = fg color
 # ^b$var^ = bg color
 
-interval=0
-
 # load colors
 . ~/.config/chadwm/scripts/bar_themes/catppuccin
 
-cpu() {
-  cpu_val=$(grep -o "^[^ ]*" /proc/loadavg)
+battery_directory_prefix="/sys/class/power_supply/BAT"
+battery_exists=false
 
-  printf "^c$black^ ^b$green^ CPU"
-  printf "^c$white^ ^b$grey^ $cpu_val"
-}
+for i in {0..9}; do
+    current_battery_directory="$battery_directory_prefix$i"
+    if [ -d "$current_battery_directory" ]; then
+        battery_exists=true
+        break
+    fi
+done
 
-pkg_updates() {
-  #updates=$({ timeout 20 doas xbps-install -un 2>/dev/null || true; } | wc -l) # void
-  updates=$({ timeout 20 checkupdates 2>/dev/null || true; } | wc -l) # arch
-  # updates=$({ timeout 20 aptitude search '~U' 2>/dev/null || true; } | wc -l)  # apt (ubuntu, debian etc)
-
-  if [ -z "$updates" ]; then
-    printf "  ^c$green^    Fully Updated"
-  else
-    printf "  ^c$green^    $updates"" updates"
+battery() {
+  if [ "$battery_exists" = true ]; then
+    charging=$(cat /sys/class/power_supply/BAT*/status)
+    capacity=$(cat /sys/class/power_supply/BAT*/capacity)
+    cbicons="󰢟󰢜󰂆󰂇󰂈󰢝󰂉󰢞󰂊󰂋"
+    bicons="󰁺󰁻󰁼󰁽󰁾󰁿󰂀󰂁󰂂󰁹"
+    if [ "$charging" = "Charging" ]; then
+      icon=$(expr substr $cbicons $(($capacity / 10)) 1)
+    else
+      icon=$(expr substr $bicons $(($capacity / 10)) 1)
+    fi
+    printf "     ^c$blue^ $icon $capacity"
   fi
 }
 
-battery() {
-  get_capacity="$(cat /sys/class/power_supply/BAT1/capacity)"
-  printf "^c$blue^   $get_capacity"
-}
-
-brightness() {
-  printf "^c$red^   "
-  printf "^c$red^%.0f\n" $(cat /sys/class/backlight/*/brightness)
+cpu() {
+  c=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%%"}')
+  printf "^c$green^ ^b$black^ "
+  printf "^c$green^ ^b$black^ $c"
 }
 
 mem() {
@@ -42,22 +43,27 @@ mem() {
   printf "^c$blue^ $(free -h | awk '/^Mem/ { print $3 }' | sed s/i//g)"
 }
 
-wlan() {
-	case "$(cat /sys/class/net/wl*/operstate 2>/dev/null)" in
-	up) printf "^c$black^ ^b$blue^ 󰤨 ^d^%s" " ^c$blue^Connected" ;;
-	down) printf "^c$black^ ^b$blue^ 󰤭 ^d^%s" " ^c$blue^Disconnected" ;;
-	esac
+lan() {
+  # Get the currently active interfac
+  gateway=$(ip route show default | awk '/default/ {print $3}')
+  interface=$(ip route get "$gateway" | awk '/dev/ {print $3}')
+
+  # Check if its connected or not
+  case "$(cat /sys/class/net/$interface/operstate 2>/dev/null)" in
+    up) printf "^c$black^ ^b$blue^ 󰤨 ^d^%s" " ^c$blue^Connected" ;;
+    down) printf "^c$black^ ^b$blue^ 󰤭 ^d^%s" " ^c$blue^Disconnected" ;;
+  esac
 }
 
 clock() {
-	printf "^c$black^ ^b$darkblue^ 󱑆 "
-	printf "^c$black^^b$blue^ $(date '+%H:%M')  "
+  clocks="󱑊󱐿󱑀󱑁󱑂󱑃󱑄󱑅󱑆󱑇󱑈󱑉"
+  time=$(date '+%H')
+  hour=$(($time%12+1))
+  c=$(expr substr $clocks $hour 1)
+  printf "^c$black^ ^b$darkblue^ $c "
+  printf "^c$black^^b$blue^ $(date '+%H:%M')  "
 }
 
 while true; do
-
-  [ $interval = 0 ] || [ $(($interval % 3600)) = 0 ] && updates=$(pkg_updates)
-  interval=$((interval + 1))
-
-  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(cpu) $(mem) $(wlan) $(clock)"
+  sleep 1 && xsetroot -name "   $(battery) $(cpu) $(mem) $(lan) $(clock)"
 done
