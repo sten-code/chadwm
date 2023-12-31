@@ -57,11 +57,11 @@ lan() {
 
 clock() {
   clocks="󱑊󱐿󱑀󱑁󱑂󱑃󱑄󱑅󱑆󱑇󱑈󱑉"
-  time=$(date '+%H')
+  time=$(date "+%H")
   hour=$(($time%12+1))
   c=$(expr substr $clocks $hour 1)
-  printf "^c$black^ ^b$darkblue^ $c "
-  printf "^c$black^^b$blue^ $(date '+%H:%M')  "
+  printf "^c$black^ ^b$darkblue^  $c  "
+  printf "^c$black^^b$blue^ $(date "+%a, %I:%M %p")  "
 }
 
 while true; do
